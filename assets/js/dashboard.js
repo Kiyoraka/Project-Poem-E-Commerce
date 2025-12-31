@@ -1,7 +1,7 @@
 /**
  * dashboard.js - Admin Dashboard Logic
  * Fantasy Book E-Commerce
- * Handles: Stats, orders management, books inventory
+ * Handles: Stats, orders management, books inventory, pagination
  */
 
 /* ============================================
@@ -11,6 +11,21 @@
 let currentView = 'dashboard';
 let currentOrderFilter = '';
 let currentOrderSearch = '';
+
+// Pagination state
+let ordersPagination = {
+  currentPage: 1,
+  perPage: 10,
+  totalItems: 0,
+  totalPages: 0
+};
+
+let booksPagination = {
+  currentPage: 1,
+  perPage: 10,
+  totalItems: 0,
+  totalPages: 0
+};
 
 /* ============================================
    INITIALIZATION
@@ -34,6 +49,9 @@ function initDashboard() {
 
   // Setup event listeners
   setupDashboardEventListeners();
+
+  // Setup pagination listeners
+  setupPaginationListeners();
 }
 
 /**
@@ -44,6 +62,197 @@ function setCurrentDate() {
   if (dateEl) {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     dateEl.textContent = new Date().toLocaleDateString('en-MY', options);
+  }
+}
+
+/* ============================================
+   PAGINATION HELPERS
+   ============================================ */
+
+/**
+ * Generate page numbers array with ellipsis
+ * @param {number} currentPage - Current page
+ * @param {number} totalPages - Total pages
+ * @returns {Array} Page numbers array
+ */
+function generatePageNumbers(currentPage, totalPages) {
+  const pages = [];
+  const maxVisible = 5;
+
+  if (totalPages <= maxVisible) {
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+  } else {
+    // Always show first page
+    pages.push(1);
+
+    if (currentPage > 3) {
+      pages.push('...');
+    }
+
+    // Show pages around current
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+
+    for (let i = start; i <= end; i++) {
+      if (!pages.includes(i)) {
+        pages.push(i);
+      }
+    }
+
+    if (currentPage < totalPages - 2) {
+      pages.push('...');
+    }
+
+    // Always show last page
+    if (!pages.includes(totalPages)) {
+      pages.push(totalPages);
+    }
+  }
+
+  return pages;
+}
+
+/**
+ * Render pagination controls
+ * @param {string} type - 'orders' or 'books'
+ * @param {Object} pagination - Pagination state
+ */
+function renderPagination(type, pagination) {
+  const pagesContainer = $(`#${type}PageNumbers`);
+  const rangeText = $(`#${type}RangeText`);
+  const prevBtn = $(`#${type}PrevBtn`);
+  const nextBtn = $(`#${type}NextBtn`);
+  const paginationEl = $(`#${type}Pagination`);
+
+  if (!pagesContainer) return;
+
+  // Hide pagination if no items
+  if (pagination.totalItems === 0) {
+    if (paginationEl) paginationEl.style.display = 'none';
+    return;
+  }
+
+  if (paginationEl) paginationEl.style.display = 'flex';
+
+  // Update range text
+  const start = (pagination.currentPage - 1) * pagination.perPage + 1;
+  const end = Math.min(pagination.currentPage * pagination.perPage, pagination.totalItems);
+  if (rangeText) {
+    rangeText.textContent = `${start}-${end} of ${pagination.totalItems}`;
+  }
+
+  // Update prev/next buttons
+  if (prevBtn) {
+    prevBtn.disabled = pagination.currentPage === 1;
+  }
+  if (nextBtn) {
+    nextBtn.disabled = pagination.currentPage === pagination.totalPages;
+  }
+
+  // Generate page numbers
+  const pageNumbers = generatePageNumbers(pagination.currentPage, pagination.totalPages);
+
+  pagesContainer.innerHTML = pageNumbers.map(page => {
+    if (page === '...') {
+      return `<span class="page-btn ellipsis">...</span>`;
+    }
+    return `
+      <button class="page-btn ${page === pagination.currentPage ? 'active' : ''}"
+              data-page="${page}" data-type="${type}">
+        ${page}
+      </button>
+    `;
+  }).join('');
+
+  // Add click listeners to page buttons
+  pagesContainer.querySelectorAll('.page-btn:not(.ellipsis)').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const page = parseInt(e.target.dataset.page);
+      const paginationType = e.target.dataset.type;
+      goToPage(paginationType, page);
+    });
+  });
+}
+
+/**
+ * Go to specific page
+ * @param {string} type - 'orders' or 'books'
+ * @param {number} page - Page number
+ */
+function goToPage(type, page) {
+  if (type === 'orders') {
+    ordersPagination.currentPage = page;
+    renderOrders();
+  } else if (type === 'books') {
+    booksPagination.currentPage = page;
+    renderBooks();
+  }
+}
+
+/**
+ * Setup pagination event listeners
+ */
+function setupPaginationListeners() {
+  // Orders per page
+  const ordersPerPage = $('#ordersPerPage');
+  if (ordersPerPage) {
+    ordersPerPage.addEventListener('change', (e) => {
+      ordersPagination.perPage = parseInt(e.target.value);
+      ordersPagination.currentPage = 1;
+      renderOrders();
+    });
+  }
+
+  // Orders prev/next
+  const ordersPrevBtn = $('#ordersPrevBtn');
+  const ordersNextBtn = $('#ordersNextBtn');
+  if (ordersPrevBtn) {
+    ordersPrevBtn.addEventListener('click', () => {
+      if (ordersPagination.currentPage > 1) {
+        ordersPagination.currentPage--;
+        renderOrders();
+      }
+    });
+  }
+  if (ordersNextBtn) {
+    ordersNextBtn.addEventListener('click', () => {
+      if (ordersPagination.currentPage < ordersPagination.totalPages) {
+        ordersPagination.currentPage++;
+        renderOrders();
+      }
+    });
+  }
+
+  // Books per page
+  const booksPerPage = $('#booksPerPage');
+  if (booksPerPage) {
+    booksPerPage.addEventListener('change', (e) => {
+      booksPagination.perPage = parseInt(e.target.value);
+      booksPagination.currentPage = 1;
+      renderBooks();
+    });
+  }
+
+  // Books prev/next
+  const booksPrevBtn = $('#booksPrevBtn');
+  const booksNextBtn = $('#booksNextBtn');
+  if (booksPrevBtn) {
+    booksPrevBtn.addEventListener('click', () => {
+      if (booksPagination.currentPage > 1) {
+        booksPagination.currentPage--;
+        renderBooks();
+      }
+    });
+  }
+  if (booksNextBtn) {
+    booksNextBtn.addEventListener('click', () => {
+      if (booksPagination.currentPage < booksPagination.totalPages) {
+        booksPagination.currentPage++;
+        renderBooks();
+      }
+    });
   }
 }
 
@@ -113,7 +322,7 @@ function renderRecentOrders() {
    ============================================ */
 
 /**
- * Render all orders
+ * Render all orders with pagination
  */
 function renderOrders() {
   const tableBody = $('#ordersTable');
@@ -137,15 +346,29 @@ function renderOrders() {
     );
   }
 
+  // Update pagination state
+  ordersPagination.totalItems = orders.length;
+  ordersPagination.totalPages = Math.ceil(orders.length / ordersPagination.perPage);
+
+  // Ensure current page is valid
+  if (ordersPagination.currentPage > ordersPagination.totalPages) {
+    ordersPagination.currentPage = Math.max(1, ordersPagination.totalPages);
+  }
+
+  // Apply pagination
+  const startIndex = (ordersPagination.currentPage - 1) * ordersPagination.perPage;
+  const paginatedOrders = orders.slice(startIndex, startIndex + ordersPagination.perPage);
+
   if (orders.length === 0) {
     tableBody.innerHTML = '';
     if (emptyState) emptyState.classList.remove('hidden');
+    renderPagination('orders', ordersPagination);
     return;
   }
 
   if (emptyState) emptyState.classList.add('hidden');
 
-  tableBody.innerHTML = orders.map(order => {
+  tableBody.innerHTML = paginatedOrders.map(order => {
     const statusInfo = getStatusInfo(order.status);
     const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -186,6 +409,9 @@ function renderOrders() {
   $$('.view-order-btn').forEach(btn => {
     btn.addEventListener('click', handleViewOrder);
   });
+
+  // Render pagination
+  renderPagination('orders', ordersPagination);
 }
 
 /**
@@ -339,7 +565,7 @@ function closeOrderModal() {
    ============================================ */
 
 /**
- * Render books inventory
+ * Render books inventory with pagination
  */
 function renderBooks() {
   const tableBody = $('#booksTable');
@@ -357,7 +583,20 @@ function renderBooks() {
   if (totalStockEl) totalStockEl.textContent = stats.totalStock;
   if (avgPriceEl) avgPriceEl.textContent = formatPrice(stats.averagePrice);
 
-  tableBody.innerHTML = books.map(book => {
+  // Update pagination state
+  booksPagination.totalItems = books.length;
+  booksPagination.totalPages = Math.ceil(books.length / booksPagination.perPage);
+
+  // Ensure current page is valid
+  if (booksPagination.currentPage > booksPagination.totalPages) {
+    booksPagination.currentPage = Math.max(1, booksPagination.totalPages);
+  }
+
+  // Apply pagination
+  const startIndex = (booksPagination.currentPage - 1) * booksPagination.perPage;
+  const paginatedBooks = books.slice(startIndex, startIndex + booksPagination.perPage);
+
+  tableBody.innerHTML = paginatedBooks.map(book => {
     const stockClass = book.stock === 0 ? 'text-error' : book.stock <= 10 ? 'text-warning' : '';
 
     return `
@@ -379,6 +618,9 @@ function renderBooks() {
       </tr>
     `;
   }).join('');
+
+  // Render pagination
+  renderPagination('books', booksPagination);
 }
 
 /* ============================================
@@ -472,6 +714,7 @@ function setupDashboardEventListeners() {
   if (statusFilter) {
     statusFilter.addEventListener('change', (e) => {
       currentOrderFilter = e.target.value;
+      ordersPagination.currentPage = 1; // Reset to page 1 on filter
       renderOrders();
     });
   }
@@ -481,6 +724,7 @@ function setupDashboardEventListeners() {
   if (searchInput) {
     searchInput.addEventListener('input', debounce((e) => {
       currentOrderSearch = e.target.value;
+      ordersPagination.currentPage = 1; // Reset to page 1 on search
       renderOrders();
     }, 300));
   }

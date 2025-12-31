@@ -192,6 +192,32 @@
           <div class="empty-state-icon">&#128230;</div>
           <p class="empty-state-text">No orders found</p>
         </div>
+        <!-- Orders Pagination -->
+        <div class="pagination" id="ordersPagination">
+          <div class="pagination-info">
+            <span>Show</span>
+            <select class="pagination-select" id="ordersPerPage">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+            </select>
+            <span>per page</span>
+          </div>
+          <div class="pagination-status">
+            <span id="ordersRangeText">1-10 of 25</span>
+          </div>
+          <div class="pagination-controls">
+            <button class="pagination-btn" id="ordersPrevBtn" disabled>
+              <span>&#8249;</span>
+            </button>
+            <div class="pagination-pages" id="ordersPageNumbers">
+              <!-- Page numbers rendered by JavaScript -->
+            </div>
+            <button class="pagination-btn" id="ordersNextBtn">
+              <span>&#8250;</span>
+            </button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -243,6 +269,32 @@
               <!-- Books rendered by JavaScript -->
             </tbody>
           </table>
+        </div>
+        <!-- Books Pagination -->
+        <div class="pagination" id="booksPagination">
+          <div class="pagination-info">
+            <span>Show</span>
+            <select class="pagination-select" id="booksPerPage">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+            </select>
+            <span>per page</span>
+          </div>
+          <div class="pagination-status">
+            <span id="booksRangeText">1-10 of 10</span>
+          </div>
+          <div class="pagination-controls">
+            <button class="pagination-btn" id="booksPrevBtn" disabled>
+              <span>&#8249;</span>
+            </button>
+            <div class="pagination-pages" id="booksPageNumbers">
+              <!-- Page numbers rendered by JavaScript -->
+            </div>
+            <button class="pagination-btn" id="booksNextBtn">
+              <span>&#8250;</span>
+            </button>
+          </div>
         </div>
       </div>
     </section>
