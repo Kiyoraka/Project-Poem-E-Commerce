@@ -5,3 +5,4 @@
 *.txt
 
 Project Resource
+.claude/settings.local.json
