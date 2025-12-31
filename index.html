@@ -42,9 +42,10 @@
             Cart
             <span class="cart-badge" id="cartBadge">0</span>
           </button>
-          <a href="dashboard.html" class="btn btn-ghost admin-link">
+          <button class="btn btn-ghost" id="adminBtn">
+            <span class="btn-icon">&#128274;</span>
             Admin
-          </a>
+          </button>
         </div>
       </nav>
     </div>
@@ -283,6 +284,50 @@
       <div class="modal-footer">
         <button class="btn btn-ghost" id="clearCartModalBtn">Clear Cart</button>
         <button class="btn btn-primary btn-lg" id="checkoutModalBtn">Proceed to Checkout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Login Modal -->
+  <div class="modal-overlay" id="adminLoginModal">
+    <div class="modal modal-login">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <span class="login-icon">&#128274;</span>
+          Admin Login
+        </h2>
+        <button class="modal-close" id="closeAdminLoginBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="adminLoginForm" class="login-form">
+          <div class="form-group">
+            <label for="adminEmail" class="form-label">Email</label>
+            <input
+              type="email"
+              id="adminEmail"
+              class="form-input"
+              placeholder="Enter admin email"
+              required
+            >
+          </div>
+          <div class="form-group">
+            <label for="adminPassword" class="form-label">Password</label>
+            <input
+              type="password"
+              id="adminPassword"
+              class="form-input"
+              placeholder="Enter password"
+              required
+            >
+          </div>
+          <div class="login-error hidden" id="loginError">
+            <span class="error-icon">&#9888;</span>
+            <span class="error-message">Invalid email or password</span>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block">
+            Login
+          </button>
+        </form>
       </div>
     </div>
   </div>

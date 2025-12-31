@@ -670,3 +670,117 @@
     margin-top: var(--space-sm);
   }
 }
+
+/* ============================================
+   ADMIN LOGIN MODAL
+   ============================================ */
+
+.modal-login {
+  max-width: 400px;
+}
+
+.modal-login .modal-header {
+  text-align: center;
+  justify-content: center;
+  position: relative;
+}
+
+.modal-login .modal-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.modal-login .modal-close {
+  position: absolute;
+  right: var(--space-md);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.login-icon {
+  font-size: 1.5rem;
+}
+
+/* Login Form */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.login-form .form-group {
+  margin-bottom: 0;
+}
+
+.login-form .form-label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.login-form .form-input {
+  width: 100%;
+  padding: var(--space-md);
+  font-size: var(--font-size-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-background);
+  transition: all var(--transition-fast);
+}
+
+.login-form .form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+}
+
+.login-form .btn-block {
+  width: 100%;
+  margin-top: var(--space-sm);
+}
+
+/* Login Error */
+.login-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background-color: rgba(178, 34, 34, 0.1);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+}
+
+.login-error .error-icon {
+  font-size: 1.25rem;
+}
+
+.login-error.hidden {
+  display: none;
+}
+
+/* Login Form Shake Animation */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.login-form.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Login Modal Responsive */
+@media (max-width: 480px) {
+  .modal-login {
+    max-width: 100%;
+  }
+
+  .login-form .form-input {
+    padding: var(--space-sm) var(--space-md);
+  }
+}

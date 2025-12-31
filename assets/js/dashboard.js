@@ -506,6 +506,22 @@ function setupDashboardEventListeners() {
   if (menuToggle) {
     menuToggle.addEventListener('click', toggleMobileSidebar);
   }
+
+  // Logout button
+  const logoutBtn = $('#logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', handleLogout);
+  }
+}
+
+/**
+ * Handle logout
+ */
+function handleLogout() {
+  if (confirm('Are you sure you want to logout?')) {
+    localStorage.removeItem('fantasy_books_admin_session');
+    window.location.href = 'index.html';
+  }
 }
 
 /**

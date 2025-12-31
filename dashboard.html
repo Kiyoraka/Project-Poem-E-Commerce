@@ -12,6 +12,14 @@
   <link rel="stylesheet" href="assets/styles/dashboard.css">
 </head>
 <body class="dashboard-body">
+  <!-- Session Check - Redirect if not logged in -->
+  <script>
+    const ADMIN_SESSION_KEY = 'fantasy_books_admin_session';
+    if (localStorage.getItem(ADMIN_SESSION_KEY) !== 'true') {
+      window.location.href = 'index.html';
+    }
+  </script>
+
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -43,6 +51,10 @@
         <span class="nav-icon">&#127968;</span>
         <span class="nav-text">Back to Store</span>
       </a>
+      <button class="nav-item" id="logoutBtn">
+        <span class="nav-icon">&#128682;</span>
+        <span class="nav-text">Logout</span>
+      </button>
     </div>
   </aside>
 
