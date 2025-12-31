@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Admin Dashboard - Fantasy Book E-Commerce">
+  <title>Admin Dashboard - Fantasy Books</title>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="assets/styles/base.css">
+  <link rel="stylesheet" href="assets/styles/components.css">
+  <link rel="stylesheet" href="assets/styles/dashboard.css">
+</head>
+<body class="dashboard-body">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="index.html" class="sidebar-logo">
+        <span class="logo-icon">&#128214;</span>
+        <span class="logo-text">Fantasy Books</span>
+      </a>
+      <span class="admin-badge">Admin</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-view="dashboard">
+        <span class="nav-icon">&#128200;</span>
+        <span class="nav-text">Dashboard</span>
+      </button>
+      <button class="nav-item" data-view="orders">
+        <span class="nav-icon">&#128230;</span>
+        <span class="nav-text">Orders</span>
+        <span class="nav-badge" id="pendingOrdersBadge">0</span>
+      </button>
+      <button class="nav-item" data-view="books">
+        <span class="nav-icon">&#128218;</span>
+        <span class="nav-text">Books</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="index.html" class="nav-item">
+        <span class="nav-icon">&#127968;</span>
+        <span class="nav-text">Back to Store</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Header -->
+    <header class="dashboard-header">
+      <button class="menu-toggle" id="menuToggle">
+        &#9776;
+      </button>
+      <h1 class="header-title" id="viewTitle">Dashboard</h1>
+      <div class="header-actions">
+        <span class="header-date" id="currentDate"></span>
+      </div>
+    </header>
+
+    <!-- Dashboard View -->
+    <section class="view active" id="dashboardView">
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-primary">&#128230;</div>
+          <div class="stat-content">
+            <span class="stat-value" id="totalOrders">0</span>
+            <span class="stat-label">Total Orders</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-warning">&#9203;</div>
+          <div class="stat-content">
+            <span class="stat-value" id="pendingOrders">0</span>
+            <span class="stat-label">Pending</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-info">&#128260;</div>
+          <div class="stat-content">
+            <span class="stat-value" id="processingOrders">0</span>
+            <span class="stat-label">Processing</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-success">&#10004;</div>
+          <div class="stat-content">
+            <span class="stat-value" id="deliveredOrders">0</span>
+            <span class="stat-label">Delivered</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Revenue Card -->
+      <div class="revenue-card">
+        <div class="revenue-header">
+          <h2 class="revenue-title">Total Revenue</h2>
+          <span class="revenue-period">From delivered orders</span>
+        </div>
+        <div class="revenue-value" id="totalRevenue">RM 0.00</div>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Recent Orders</h2>
+          <button class="btn btn-ghost btn-sm" data-view="orders">View All</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="recentOrdersTable">
+              <!-- Orders rendered by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Orders View -->
+    <section class="view" id="ordersView">
+      <!-- Filters -->
+      <div class="filters-bar">
+        <div class="filter-group">
+          <label for="orderStatusFilter" class="filter-label">Status:</label>
+          <select id="orderStatusFilter" class="form-select filter-select">
+            <option value="">All Orders</option>
+            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <input
+            type="text"
+            id="orderSearchInput"
+            class="form-input"
+            placeholder="Search by Order ID or Customer..."
+          >
+        </div>
+      </div>
+
+      <!-- Orders Table -->
+      <div class="section-card">
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTable">
+              <!-- Orders rendered by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+        <div class="empty-state hidden" id="noOrdersFound">
+          <div class="empty-state-icon">&#128230;</div>
+          <p class="empty-state-text">No orders found</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Books View -->
+    <section class="view" id="booksView">
+      <!-- Stats -->
+      <div class="stats-grid stats-grid-3">
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-primary">&#128218;</div>
+          <div class="stat-content">
+            <span class="stat-value" id="totalBooks">0</span>
+            <span class="stat-label">Total Books</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-success">&#128451;</div>
+          <div class="stat-content">
+            <span class="stat-value" id="totalStock">0</span>
+            <span class="stat-label">Total Stock</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-info">&#127991;</div>
+          <div class="stat-content">
+            <span class="stat-value" id="avgPrice">RM 0.00</span>
+            <span class="stat-label">Avg. Price</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Books Table -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Books Inventory</h2>
+        </div>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Book</th>
+                <th>Author</th>
+                <th>Genre</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Rating</th>
+              </tr>
+            </thead>
+            <tbody id="booksTable">
+              <!-- Books rendered by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Order Details Modal -->
+  <div class="modal-overlay" id="orderModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h2 class="modal-title">Order Details</h2>
+        <button class="modal-close" id="closeOrderModal">&times;</button>
+      </div>
+      <div class="modal-body" id="orderModalContent">
+        <!-- Order details rendered by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/dashboard.js"></script>
+</body>
+</html>
