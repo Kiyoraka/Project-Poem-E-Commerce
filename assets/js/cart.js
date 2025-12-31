@@ -1,114 +1,202 @@
 /**
  * cart.js - Shopping Cart Logic
  * Fantasy Book E-Commerce
- * Handles: Cart management, quantity updates, totals
+ * Handles: Cart management, modal display, quantity updates, totals
  */
 
 /* ============================================
-   CART PAGE INITIALIZATION
+   CART STORAGE OPERATIONS
    ============================================ */
 
+const CART_KEY = 'fantasy_books_cart';
+
 /**
- * Initialize cart page
+ * Get cart from localStorage
+ * @returns {Array} Cart items
  */
-function initCartPage() {
-  renderCart();
-  setupCartEventListeners();
+function getCart() {
+  try {
+    const cart = localStorage.getItem(CART_KEY);
+    return cart ? JSON.parse(cart) : [];
+  } catch (e) {
+    console.error('Error reading cart:', e);
+    return [];
+  }
+}
+
+/**
+ * Save cart to localStorage
+ * @param {Array} cart - Cart items
+ */
+function saveCart(cart) {
+  try {
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  } catch (e) {
+    console.error('Error saving cart:', e);
+  }
+}
+
+/**
+ * Clear cart
+ */
+function clearCart() {
+  saveCart([]);
+  updateCartBadge();
+}
+
+/**
+ * Get total price of cart
+ * @returns {number} Total price
+ */
+function getCartTotal() {
+  const cart = getCart();
+  return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+}
+
+/**
+ * Get total item count in cart
+ * @returns {number} Item count
+ */
+function getCartItemCount() {
+  const cart = getCart();
+  return cart.reduce((count, item) => count + item.quantity, 0);
+}
+
+/**
+ * Add item to cart
+ * @param {Object} book - Book object
+ * @param {number} quantity - Quantity to add
+ */
+function addToCart(book, quantity = 1) {
+  const cart = getCart();
+  const existingIndex = cart.findIndex(item => item.bookId === book.id);
+
+  if (existingIndex !== -1) {
+    // Update quantity if already in cart
+    cart[existingIndex].quantity += quantity;
+    cart[existingIndex].quantity = clamp(cart[existingIndex].quantity, 1, 99);
+  } else {
+    // Add new item
+    cart.push({
+      bookId: book.id,
+      title: book.title,
+      author: book.author,
+      price: book.price,
+      image: book.image,
+      quantity: quantity
+    });
+  }
+
+  saveCart(cart);
+  updateCartBadge();
+
+  return cart;
 }
 
 /* ============================================
-   RENDER FUNCTIONS
+   CART MODAL OPERATIONS
    ============================================ */
 
 /**
- * Render cart items
+ * Open cart modal
  */
-function renderCart() {
-  const cartContainer = $('#cartItems');
-  const cartEmpty = $('#cartEmpty');
-  const cartContent = $('#cartContent');
-  const cartSummary = $('#cartSummary');
+function openCartModal() {
+  const modal = $('#cartModal');
+  if (modal) {
+    renderCartModal();
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+}
 
-  if (!cartContainer) return;
+/**
+ * Close cart modal
+ */
+function closeCartModal() {
+  const modal = $('#cartModal');
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+}
+
+/**
+ * Render cart modal content
+ */
+function renderCartModal() {
+  const cartItems = $('#cartModalItems');
+  const cartEmpty = $('#cartModalEmpty');
+  const cartSummary = $('#cartModalSummary');
+  const cartCount = $('#modalCartCount');
+
+  if (!cartItems) return;
 
   const cart = getCart();
+  const itemCount = getCartItemCount();
+
+  // Update header count
+  if (cartCount) {
+    cartCount.textContent = `(${itemCount} item${itemCount !== 1 ? 's' : ''})`;
+  }
 
   // Check if cart is empty
   if (cart.length === 0) {
+    cartItems.innerHTML = '';
     if (cartEmpty) cartEmpty.classList.remove('hidden');
-    if (cartContent) cartContent.classList.add('hidden');
     if (cartSummary) cartSummary.classList.add('hidden');
     return;
   }
 
   if (cartEmpty) cartEmpty.classList.add('hidden');
-  if (cartContent) cartContent.classList.remove('hidden');
   if (cartSummary) cartSummary.classList.remove('hidden');
 
   // Render cart items
-  cartContainer.innerHTML = cart.map(item => createCartItemHTML(item)).join('');
+  cartItems.innerHTML = cart.map(item => createCartModalItemHTML(item)).join('');
 
   // Update summary
-  updateCartSummary();
+  updateCartModalSummary();
 
-  // Setup quantity input listeners
-  setupQuantityListeners();
+  // Setup quantity listeners
+  setupCartModalQuantityListeners();
 }
 
 /**
- * Create HTML for cart item
+ * Create HTML for cart modal item
  * @param {Object} item - Cart item
  * @returns {string} HTML string
  */
-function createCartItemHTML(item) {
-  const subtotal = item.price * item.quantity;
-
+function createCartModalItemHTML(item) {
   return `
-    <div class="cart-item" data-book-id="${item.bookId}">
-      <div class="cart-item-image" style="background-image: url('${item.image}');">
+    <div class="cart-modal-item" data-book-id="${item.bookId}">
+      <div class="cart-modal-item-image" style="background-image: url('${item.image}');"></div>
+      <div class="cart-modal-item-details">
+        <div class="cart-modal-item-title">${item.title}</div>
+        <div class="cart-modal-item-author">by ${item.author}</div>
+        <div class="cart-modal-item-price">${formatPrice(item.price * item.quantity)}</div>
       </div>
-      <div class="cart-item-details">
-        <h3 class="cart-item-title">${item.title}</h3>
-        <p class="cart-item-author">by ${item.author}</p>
-        <p class="cart-item-price">${formatPrice(item.price)}</p>
-      </div>
-      <div class="cart-item-quantity">
-        <div class="quantity-input">
-          <button class="quantity-btn qty-decrease" data-book-id="${item.bookId}">-</button>
-          <input
-            type="number"
-            class="quantity-value"
-            value="${item.quantity}"
-            min="1"
-            max="99"
-            data-book-id="${item.bookId}"
-          >
-          <button class="quantity-btn qty-increase" data-book-id="${item.bookId}">+</button>
+      <div class="cart-modal-item-actions">
+        <button class="cart-modal-item-remove" data-book-id="${item.bookId}" title="Remove item">
+          &times;
+        </button>
+        <div class="cart-modal-quantity">
+          <button class="cart-modal-qty-btn cart-qty-decrease" data-book-id="${item.bookId}">-</button>
+          <span class="cart-modal-qty-value">${item.quantity}</span>
+          <button class="cart-modal-qty-btn cart-qty-increase" data-book-id="${item.bookId}">+</button>
         </div>
       </div>
-      <div class="cart-item-subtotal">
-        <span class="subtotal-label">Subtotal</span>
-        <span class="subtotal-value">${formatPrice(subtotal)}</span>
-      </div>
-      <button class="cart-item-remove" data-book-id="${item.bookId}" title="Remove item">
-        &times;
-      </button>
     </div>
   `;
 }
 
 /**
- * Update cart summary
+ * Update cart modal summary
  */
-function updateCartSummary() {
-  const subtotalEl = $('#summarySubtotal');
-  const shippingEl = $('#summaryShipping');
-  const totalEl = $('#summaryTotal');
-  const itemCountEl = $('#summaryItemCount');
+function updateCartModalSummary() {
+  const subtotalEl = $('#cartModalSubtotal');
+  const shippingEl = $('#cartModalShipping');
+  const totalEl = $('#cartModalTotal');
 
-  const cart = getCart();
   const subtotal = getCartTotal();
-  const itemCount = getCartItemCount();
 
   // Free shipping over RM100
   const shipping = subtotal >= 100 ? 0 : 5.00;
@@ -117,14 +205,13 @@ function updateCartSummary() {
   if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
   if (shippingEl) shippingEl.textContent = shipping === 0 ? 'FREE' : formatPrice(shipping);
   if (totalEl) totalEl.textContent = formatPrice(total);
-  if (itemCountEl) itemCountEl.textContent = `${itemCount} item${itemCount !== 1 ? 's' : ''}`;
 
   // Update cart badge
   updateCartBadge();
 }
 
 /* ============================================
-   CART OPERATIONS
+   CART ITEM OPERATIONS
    ============================================ */
 
 /**
@@ -143,7 +230,7 @@ function updateItemQuantity(bookId, newQuantity) {
   cart[itemIndex].quantity = newQuantity;
   saveCart(cart);
 
-  renderCart();
+  renderCartModal();
 }
 
 /**
@@ -155,7 +242,7 @@ function removeFromCart(bookId) {
   const newCart = cart.filter(item => item.bookId !== bookId);
 
   saveCart(newCart);
-  renderCart();
+  renderCartModal();
 
   showToast('Item removed from cart', 'info');
 }
@@ -194,53 +281,15 @@ function decreaseQuantity(bookId) {
 }
 
 /* ============================================
-   EVENT HANDLERS
+   EVENT LISTENERS
    ============================================ */
 
 /**
- * Setup cart page event listeners
+ * Setup cart modal quantity listeners
  */
-function setupCartEventListeners() {
-  // Continue shopping button
-  const continueBtn = $('#continueShoppingBtn');
-  if (continueBtn) {
-    continueBtn.addEventListener('click', () => {
-      window.location.href = 'index.html';
-    });
-  }
-
-  // Checkout button
-  const checkoutBtn = $('#checkoutBtn');
-  if (checkoutBtn) {
-    checkoutBtn.addEventListener('click', () => {
-      const cart = getCart();
-      if (cart.length === 0) {
-        showToast('Your cart is empty', 'warning');
-        return;
-      }
-      window.location.href = 'checkout.html';
-    });
-  }
-
-  // Clear cart button
-  const clearCartBtn = $('#clearCartBtn');
-  if (clearCartBtn) {
-    clearCartBtn.addEventListener('click', () => {
-      if (confirm('Are you sure you want to clear your cart?')) {
-        clearCart();
-        renderCart();
-        showToast('Cart cleared', 'info');
-      }
-    });
-  }
-}
-
-/**
- * Setup quantity input listeners
- */
-function setupQuantityListeners() {
+function setupCartModalQuantityListeners() {
   // Decrease buttons
-  $$('.qty-decrease').forEach(btn => {
+  $$('.cart-qty-decrease').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const bookId = parseInt(e.target.dataset.bookId);
       decreaseQuantity(bookId);
@@ -248,29 +297,100 @@ function setupQuantityListeners() {
   });
 
   // Increase buttons
-  $$('.qty-increase').forEach(btn => {
+  $$('.cart-qty-increase').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const bookId = parseInt(e.target.dataset.bookId);
       increaseQuantity(bookId);
     });
   });
 
-  // Quantity inputs
-  $$('.quantity-value').forEach(input => {
-    input.addEventListener('change', (e) => {
-      const bookId = parseInt(e.target.dataset.bookId);
-      const newQty = parseInt(e.target.value);
-      updateItemQuantity(bookId, newQty);
-    });
-  });
-
   // Remove buttons
-  $$('.cart-item-remove').forEach(btn => {
+  $$('.cart-modal-item-remove').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const bookId = parseInt(e.target.dataset.bookId);
       removeFromCart(bookId);
     });
   });
+}
+
+/**
+ * Setup cart modal event listeners
+ */
+function setupCartModalEventListeners() {
+  // Cart button (open modal)
+  const cartBtn = $('#cartBtn');
+  if (cartBtn) {
+    cartBtn.addEventListener('click', openCartModal);
+  }
+
+  // Footer cart link
+  const footerCartLink = $('#footerCartLink');
+  if (footerCartLink) {
+    footerCartLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      openCartModal();
+    });
+  }
+
+  // Close button
+  const closeBtn = $('#closeCartModalBtn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeCartModal);
+  }
+
+  // Click outside to close
+  const modal = $('#cartModal');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeCartModal();
+      }
+    });
+  }
+
+  // ESC key to close
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const modal = $('#cartModal');
+      if (modal && modal.classList.contains('active')) {
+        closeCartModal();
+      }
+    }
+  });
+
+  // Clear cart button
+  const clearCartBtn = $('#clearCartModalBtn');
+  if (clearCartBtn) {
+    clearCartBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to clear your cart?')) {
+        clearCart();
+        renderCartModal();
+        showToast('Cart cleared', 'info');
+      }
+    });
+  }
+
+  // Checkout button
+  const checkoutBtn = $('#checkoutModalBtn');
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', () => {
+      const cart = getCart();
+      if (cart.length === 0) {
+        showToast('Your cart is empty', 'warning');
+        return;
+      }
+      closeCartModal();
+      window.location.href = 'checkout.html';
+    });
+  }
+
+  // Continue browsing button
+  const continueBtn = $('#continueBrowsingBtn');
+  if (continueBtn) {
+    continueBtn.addEventListener('click', () => {
+      closeCartModal();
+    });
+  }
 }
 
 /* ============================================
@@ -299,12 +419,15 @@ function updateCartBadge() {
    INITIALIZE
    ============================================ */
 
-// Only initialize on cart page
+// Initialize cart functionality
 if (typeof window !== 'undefined') {
   document.addEventListener('DOMContentLoaded', () => {
-    // Check if we're on cart page
-    if ($('#cartItems')) {
-      initCartPage();
+    // Always update cart badge
+    updateCartBadge();
+
+    // Setup cart modal event listeners (on landing page)
+    if ($('#cartModal')) {
+      setupCartModalEventListeners();
     }
   });
 }

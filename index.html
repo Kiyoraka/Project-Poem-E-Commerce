@@ -37,11 +37,11 @@
             <span class="btn-icon">&#128269;</span>
             Track Order
           </button>
-          <a href="cart.html" class="btn btn-outline cart-btn">
+          <button class="btn btn-outline cart-btn" id="cartBtn">
             <span class="btn-icon">&#128722;</span>
             Cart
             <span class="cart-badge" id="cartBadge">0</span>
-          </a>
+          </button>
           <a href="dashboard.html" class="btn btn-ghost admin-link">
             Admin
           </a>
@@ -154,7 +154,7 @@
             <ul class="footer-list">
               <li><a href="index.html">Home</a></li>
               <li><a href="#books">Browse Books</a></li>
-              <li><a href="cart.html">Shopping Cart</a></li>
+              <li><a href="#" id="footerCartLink">Shopping Cart</a></li>
             </ul>
           </div>
           <div class="footer-column">
@@ -232,6 +232,57 @@
             <p class="empty-state-text">No past orders found</p>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Modal -->
+  <div class="modal-overlay" id="cartModal">
+    <div class="modal modal-cart">
+      <div class="modal-header">
+        <h2 class="modal-title">Shopping Cart <span class="cart-count" id="modalCartCount">(0 items)</span></h2>
+        <button class="modal-close" id="closeCartModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Cart Items -->
+        <div class="cart-modal-items" id="cartModalItems">
+          <!-- Cart items will be rendered by JavaScript -->
+        </div>
+
+        <!-- Empty Cart State -->
+        <div class="cart-modal-empty hidden" id="cartModalEmpty">
+          <div class="empty-state">
+            <div class="empty-state-icon">&#128722;</div>
+            <h3 class="empty-state-title">Your cart is empty</h3>
+            <p class="empty-state-text">Add some magical books to get started!</p>
+            <button class="btn btn-primary" id="continueBrowsingBtn">Browse Books</button>
+          </div>
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="cart-modal-summary" id="cartModalSummary">
+          <div class="summary-row">
+            <span class="summary-label">Subtotal</span>
+            <span class="summary-value" id="cartModalSubtotal">RM 0.00</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Shipping</span>
+            <span class="summary-value" id="cartModalShipping">RM 0.00</span>
+          </div>
+          <div class="summary-note">
+            <span class="note-icon">&#128666;</span>
+            Free shipping on orders over RM100
+          </div>
+          <div class="summary-divider"></div>
+          <div class="summary-row summary-total">
+            <span class="summary-label">Total</span>
+            <span class="summary-value" id="cartModalTotal">RM 0.00</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="clearCartModalBtn">Clear Cart</button>
+        <button class="btn btn-primary btn-lg" id="checkoutModalBtn">Proceed to Checkout</button>
       </div>
     </div>
   </div>
