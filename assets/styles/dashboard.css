@@ -52,6 +52,12 @@
   font-size: 1.5rem;
 }
 
+.sidebar-logo .logo-image {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
 .sidebar-logo .logo-text {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
