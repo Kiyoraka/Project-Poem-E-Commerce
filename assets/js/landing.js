@@ -1,7 +1,7 @@
 /**
  * landing.js - Landing Page Logic
  * Fantasy Book E-Commerce
- * Handles: Book rendering, search, filtering, sorting
+ * Handles: Book rendering, search, filtering, sorting, pagination
  */
 
 /* ============================================
@@ -12,6 +12,14 @@ let currentBooks = [];
 let currentGenreFilter = '';
 let currentSortOption = 'title-asc';
 let currentSearchQuery = '';
+
+// Pagination state
+let storePagination = {
+  currentPage: 1,
+  perPage: 8, // Max 8 books per page
+  totalItems: 0,
+  totalPages: 0
+};
 
 /* ============================================
    INITIALIZATION
@@ -33,8 +41,169 @@ function initLandingPage() {
   // Setup event listeners
   setupLandingEventListeners();
 
+  // Setup pagination listeners
+  setupStorePaginationListeners();
+
   // Update cart badge
   updateCartBadge();
+}
+
+/* ============================================
+   PAGINATION HELPERS
+   ============================================ */
+
+/**
+ * Generate page numbers array with ellipsis
+ * @param {number} currentPage - Current page
+ * @param {number} totalPages - Total pages
+ * @returns {Array} Page numbers array
+ */
+function generateStorePageNumbers(currentPage, totalPages) {
+  const pages = [];
+  const maxVisible = 5;
+
+  if (totalPages <= maxVisible) {
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+  } else {
+    pages.push(1);
+
+    if (currentPage > 3) {
+      pages.push('...');
+    }
+
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+
+    for (let i = start; i <= end; i++) {
+      if (!pages.includes(i)) {
+        pages.push(i);
+      }
+    }
+
+    if (currentPage < totalPages - 2) {
+      pages.push('...');
+    }
+
+    if (!pages.includes(totalPages)) {
+      pages.push(totalPages);
+    }
+  }
+
+  return pages;
+}
+
+/**
+ * Render store pagination controls
+ */
+function renderStorePagination() {
+  const pagesContainer = $('#storePageNumbers');
+  const rangeText = $('#storeRangeText');
+  const prevBtn = $('#storePrevBtn');
+  const nextBtn = $('#storeNextBtn');
+  const paginationEl = $('#storePagination');
+
+  if (!pagesContainer) return;
+
+  // Hide pagination if 1 page or less
+  if (storePagination.totalPages <= 1) {
+    if (paginationEl) paginationEl.style.display = 'none';
+    return;
+  }
+
+  if (paginationEl) paginationEl.style.display = 'flex';
+
+  // Update range text
+  const start = (storePagination.currentPage - 1) * storePagination.perPage + 1;
+  const end = Math.min(storePagination.currentPage * storePagination.perPage, storePagination.totalItems);
+  if (rangeText) {
+    rangeText.textContent = `${start}-${end} of ${storePagination.totalItems}`;
+  }
+
+  // Update prev/next buttons
+  if (prevBtn) {
+    prevBtn.disabled = storePagination.currentPage === 1;
+  }
+  if (nextBtn) {
+    nextBtn.disabled = storePagination.currentPage === storePagination.totalPages;
+  }
+
+  // Generate page numbers
+  const pageNumbers = generateStorePageNumbers(storePagination.currentPage, storePagination.totalPages);
+
+  pagesContainer.innerHTML = pageNumbers.map(page => {
+    if (page === '...') {
+      return `<span class="page-btn ellipsis">...</span>`;
+    }
+    return `
+      <button class="page-btn ${page === storePagination.currentPage ? 'active' : ''}"
+              data-page="${page}">
+        ${page}
+      </button>
+    `;
+  }).join('');
+
+  // Add click listeners to page buttons
+  pagesContainer.querySelectorAll('.page-btn:not(.ellipsis)').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const page = parseInt(e.target.dataset.page);
+      goToStorePage(page);
+    });
+  });
+}
+
+/**
+ * Go to specific page
+ * @param {number} page - Page number
+ */
+function goToStorePage(page) {
+  storePagination.currentPage = page;
+  renderBooks();
+
+  // Scroll to books section
+  const booksSection = $('#books');
+  if (booksSection) {
+    booksSection.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+/**
+ * Setup store pagination event listeners
+ */
+function setupStorePaginationListeners() {
+  const prevBtn = $('#storePrevBtn');
+  const nextBtn = $('#storeNextBtn');
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (storePagination.currentPage > 1) {
+        storePagination.currentPage--;
+        renderBooks();
+        scrollToBooksSection();
+      }
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      if (storePagination.currentPage < storePagination.totalPages) {
+        storePagination.currentPage++;
+        renderBooks();
+        scrollToBooksSection();
+      }
+    });
+  }
+}
+
+/**
+ * Scroll to books section
+ */
+function scrollToBooksSection() {
+  const booksSection = $('#books');
+  if (booksSection) {
+    booksSection.scrollIntoView({ behavior: 'smooth' });
+  }
 }
 
 /* ============================================
@@ -42,7 +211,7 @@ function initLandingPage() {
    ============================================ */
 
 /**
- * Render books to the grid
+ * Render books to the grid with pagination
  */
 function renderBooks() {
   const booksGrid = $('#booksGrid');
@@ -55,6 +224,15 @@ function renderBooks() {
   let filteredBooks = filterBooks(currentBooks);
   filteredBooks = sortBooks(filteredBooks);
 
+  // Update pagination state
+  storePagination.totalItems = filteredBooks.length;
+  storePagination.totalPages = Math.ceil(filteredBooks.length / storePagination.perPage);
+
+  // Ensure current page is valid
+  if (storePagination.currentPage > storePagination.totalPages) {
+    storePagination.currentPage = Math.max(1, storePagination.totalPages);
+  }
+
   // Update book count
   if (bookCount) {
     bookCount.textContent = `${filteredBooks.length} Book${filteredBooks.length !== 1 ? 's' : ''}`;
@@ -64,18 +242,26 @@ function renderBooks() {
   if (filteredBooks.length === 0) {
     booksGrid.innerHTML = '';
     if (emptyState) emptyState.classList.remove('hidden');
+    renderStorePagination();
     return;
   }
 
   if (emptyState) emptyState.classList.add('hidden');
 
+  // Apply pagination
+  const startIndex = (storePagination.currentPage - 1) * storePagination.perPage;
+  const paginatedBooks = filteredBooks.slice(startIndex, startIndex + storePagination.perPage);
+
   // Render book cards
-  booksGrid.innerHTML = filteredBooks.map(book => createBookCardHTML(book)).join('');
+  booksGrid.innerHTML = paginatedBooks.map(book => createBookCardHTML(book)).join('');
 
   // Add event listeners to add-to-cart buttons
   $$('.add-to-cart-btn', booksGrid).forEach(btn => {
     btn.addEventListener('click', handleAddToCart);
   });
+
+  // Render pagination
+  renderStorePagination();
 }
 
 /**
@@ -218,6 +404,7 @@ function clearFilters() {
   currentSearchQuery = '';
   currentGenreFilter = '';
   currentSortOption = 'title-asc';
+  storePagination.currentPage = 1; // Reset to page 1
 
   const searchInput = $('#searchInput');
   const genreFilter = $('#genreFilter');
@@ -285,6 +472,7 @@ function setupLandingEventListeners() {
  */
 function handleSearch(event) {
   currentSearchQuery = event.target.value.trim();
+  storePagination.currentPage = 1; // Reset to page 1 on search
   renderBooks();
 }
 
@@ -294,6 +482,7 @@ function handleSearch(event) {
  */
 function handleGenreFilter(event) {
   currentGenreFilter = event.target.value;
+  storePagination.currentPage = 1; // Reset to page 1 on filter
   renderBooks();
 }
 
@@ -303,6 +492,7 @@ function handleGenreFilter(event) {
  */
 function handleSortFilter(event) {
   currentSortOption = event.target.value;
+  storePagination.currentPage = 1; // Reset to page 1 on sort
   renderBooks();
 }
 

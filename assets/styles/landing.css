@@ -617,6 +617,99 @@
 }
 
 /* ============================================
+   STORE PAGINATION
+   ============================================ */
+
+.store-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg);
+  margin-top: var(--space-xl);
+  padding: var(--space-lg);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  flex-wrap: wrap;
+}
+
+.store-pagination .pagination-status {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.store-pagination .pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.store-pagination .pagination-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.store-pagination .pagination-btn:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+.store-pagination .pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.store-pagination .pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.store-pagination .page-btn {
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.store-pagination .page-btn:hover:not(.active):not(.ellipsis) {
+  background-color: var(--color-surface-hover);
+  border-color: var(--color-primary);
+}
+
+.store-pagination .page-btn.active {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+.store-pagination .page-btn.ellipsis {
+  border: none;
+  background: none;
+  cursor: default;
+  min-width: auto;
+}
+
+/* ============================================
    RESPONSIVE DESIGN
    ============================================ */
 
